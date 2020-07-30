@@ -30,6 +30,7 @@
 
 int g_iLastViewmodelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 int g_iLastArmModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+int g_iLastWorldModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 
 public void OnMapStart() {
 	for (int i = 1; i <= MaxClients; i++) {
@@ -133,6 +134,16 @@ public void OnWeaponSwitchPost(int client, int weapon) {
 	strcopy(wm, sizeof(wm), cm);
 	if (strlen(wm) || TF2CustAttr_GetString(weapon, "worldmodel override", wm, sizeof(wm))) {
 		SetWeaponWorldModel(weapon, wm);
+		
+		// the following shows weapons on other players, as m_nModelIndexOverrides is messy
+		int weaponwm = TF2_SpawnWearable();
+		SetEntityModel(weaponwm, wm);
+		
+		TF2_EquipPlayerWearable(client, weaponwm);
+		g_iLastWorldModelRef[client] = EntIndexToEntRef(weaponwm);
+		
+		SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
+		SetEntityRenderColor(weapon, 0, 0, 0, 0);
 	}
 }
 
@@ -202,6 +213,15 @@ void DetachVMs(int client) {
 	int lastArmModel = EntRefToEntIndex(g_iLastArmModelRef[client]);
 	if (IsValidEntity(lastArmModel)) {
 		TF2_RemoveWearable(client, lastArmModel);
+	}
+	int lastWeaponModel = EntRefToEntIndex(g_iLastWorldModelRef[client]);
+	if (IsValidEntity(lastWeaponModel)) {
+		TF2_RemoveWearable(client, lastWeaponModel);
+		
+		int activeWeapon = TF2_GetClientActiveWeapon(client);
+		if (IsValidEntity(activeWeapon)) {
+			SetEntityRenderMode(activeWeapon, RENDER_NORMAL);
+		}
 	}
 	
 	int clientView = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
