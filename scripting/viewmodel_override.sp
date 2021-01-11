@@ -28,6 +28,8 @@
 #define EF_NODRAW (1 << 5)
 #define EF_BONEMERGE_FASTCULL (1 << 7)
 
+#define TF_ITEM_DEFINDEX_GUNSLINGER 142
+
 int g_iLastViewmodelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 int g_iLastArmModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 int g_iLastWorldModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
@@ -231,10 +233,10 @@ void DetachVMs(int client) {
 }
 
 /**
- * Returns the arm viewmodel for the given client's assigned class.
+ * Returns the arm viewmodel appropriate for the given player.
  */
 int GetArmViewModel(int client, char[] buffer, int maxlen) {
-	static char armModels[][] = {
+	static char armModels[TFClassType][] = {
 		"",
 		"models/weapons/c_models/c_scout_arms.mdl",
 		"models/weapons/c_models/c_sniper_arms.mdl",
@@ -249,10 +251,11 @@ int GetArmViewModel(int client, char[] buffer, int maxlen) {
 	
 	TFClassType playerClass = TF2_GetPlayerClass(client);
 	
-	// kludge: use gunslinger vm if gunslinger is active on engineer
+	// special case kludge: use gunslinger vm if gunslinger is active on engineer
 	if (playerClass == TFClass_Engineer) {
-		int meleeWeapon = TF2_GetPlayerLoadoutSlot(client, TF2LoadoutSlot_Melee);
-		if (IsValidEntity(meleeWeapon) && TF2_GetItemDefinitionIndex(meleeWeapon) == 142) {
+		int meleeWeapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
+		if (IsValidEntity(meleeWeapon)
+				&& TF2_GetItemDefinitionIndex(meleeWeapon) == TF_ITEM_DEFINDEX_GUNSLINGER) {
 			return strcopy(buffer, maxlen, "models/weapons/c_models/c_engineer_gunslinger.mdl");
 		}
 	}
