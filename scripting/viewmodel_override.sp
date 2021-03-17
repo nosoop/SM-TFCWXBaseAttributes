@@ -262,27 +262,17 @@ bool SetAttachedSapperModel(int sapper, const char[] worldmodel) {
  * Detaches any custom viewmodels on the client and displays the original viewmodel.
  */
 void DetachVMs(int client) {
-	int lastViewmodel = EntRefToEntIndex(g_iLastViewmodelRef[client]);
-	if (IsValidEntity(lastViewmodel)) {
-		TF2_RemoveWearable(client, lastViewmodel);
-	}
-	int lastArmModel = EntRefToEntIndex(g_iLastArmModelRef[client]);
-	if (IsValidEntity(lastArmModel)) {
-		TF2_RemoveWearable(client, lastArmModel);
-	}
-	int lastWeaponModel = EntRefToEntIndex(g_iLastWorldModelRef[client]);
-	if (IsValidEntity(lastWeaponModel)) {
-		TF2_RemoveWearable(client, lastWeaponModel);
-		
+	MaybeRemoveWearable(client, g_iLastViewmodelRef[client]);
+	MaybeRemoveWearable(client, g_iLastArmModelRef[client]);
+	
+	if (MaybeRemoveWearable(client, g_iLastWorldModelRef[client])) {
 		int activeWeapon = TF2_GetClientActiveWeapon(client);
 		if (IsValidEntity(activeWeapon)) {
 			SetEntityRenderMode(activeWeapon, RENDER_NORMAL);
 		}
 	}
-	int lastOffHandViewmodel = EntRefToEntIndex(g_iLastOffHandViewmodelRef[client]);
-	if (IsValidEntity(lastOffHandViewmodel)) {
-		TF2_RemoveWearable(client, lastOffHandViewmodel);
-	}
+	
+	MaybeRemoveWearable(client, g_iLastOffHandViewmodelRef[client]);
 	
 	int clientView = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
 	if (IsValidEntity(clientView)) {
@@ -319,6 +309,14 @@ int GetArmViewModel(int client, char[] buffer, int maxlen) {
 	}
 	
 	return strcopy(buffer, maxlen, armModels[ view_as<int>(playerClass) ]);
+}
+
+bool MaybeRemoveWearable(int client, int wearable) {
+	if (IsValidEntity(wearable)) {
+		TF2_RemoveWearable(client, EntRefToEntIndex(wearable));
+		return true;
+	}
+	return false;
 }
 
 /**
