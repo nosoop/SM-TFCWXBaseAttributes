@@ -156,6 +156,8 @@ public void OnWeaponSwitchPost(int client, int weapon) {
 			
 			g_iLastOffHandViewmodelRef[client] = EntIndexToEntRef(offhandwearable);
 			
+			SetEntityModel(shield, ohvm);
+			
 			bNeedsArmVM = true;
 		}
 	}
