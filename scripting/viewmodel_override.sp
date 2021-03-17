@@ -23,6 +23,8 @@
 #include <tf_custom_attributes>
 #include <stocksoup/tf/entity_prop_stocks>
 #include <stocksoup/tf/econ>
+#include <tf2utils>
+#include <tf_econ_data>
 
 #define EF_BONEMERGE (1 << 0)
 #define EF_NODRAW (1 << 5)
@@ -33,6 +35,8 @@
 int g_iLastViewmodelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 int g_iLastArmModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 int g_iLastWorldModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+
+int g_iLastOffHandViewmodelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 
 public void OnMapStart() {
 	for (int i = 1; i <= MaxClients; i++) {
@@ -97,6 +101,8 @@ public void OnInventoryAppliedPost(Event event, const char[] name, bool dontBroa
 public void OnWeaponSwitchPost(int client, int weapon) {
 	DetachVMs(client);
 	
+	bool bNeedsArmVM;
+	
 	char cm[PLATFORM_MAX_PATH];
 	TF2CustAttr_GetString(weapon, "clientmodel override", cm, sizeof(cm));
 	
@@ -114,30 +120,16 @@ public void OnWeaponSwitchPost(int client, int weapon) {
 		
 		g_iLastViewmodelRef[client] = EntIndexToEntRef(weaponvm);
 		
-		char armvmPath[PLATFORM_MAX_PATH];
-		if (GetArmViewModel(client, armvmPath, sizeof(armvmPath))) {
-			// armvmPath might not be precached on the server
-			// mainly an issue with the gunslinger variation of the arm model
-			PrecacheModel(armvmPath);
-			
-			int armvm = TF2_SpawnWearableViewmodel();
-			
-			SetEntityModel(armvm, armvmPath);
-			TF2_EquipPlayerWearable(client, armvm);
-			
-			g_iLastArmModelRef[client] = EntIndexToEntRef(armvm);
-		}
-		
-		int clientView = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
-		SetEntProp(clientView, Prop_Send, "m_fEffects", EF_NODRAW);
+		bNeedsArmVM = true;
 	}
 	
 	char wm[PLATFORM_MAX_PATH];
 	strcopy(wm, sizeof(wm), cm);
 	if (strlen(wm) || TF2CustAttr_GetString(weapon, "worldmodel override", wm, sizeof(wm))) {
+		// this allows other players to see the given weapon with the correct model
 		SetWeaponWorldModel(weapon, wm);
 		
-		// the following shows weapons on other players, as m_nModelIndexOverrides is messy
+		// the following shows the weapon in third-person, as m_nModelIndexOverrides is messy
 		int weaponwm = TF2_SpawnWearable();
 		SetEntityModel(weaponwm, wm);
 		
@@ -146,6 +138,68 @@ public void OnWeaponSwitchPost(int client, int weapon) {
 		
 		SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(weapon, 0, 0, 0, 0);
+	}
+	
+	if (TF2_GetPlayerClass(client) == TFClass_DemoMan && TF2Util_IsEntityWeapon(weapon)
+			&& TF2Util_GetWeaponSlot(weapon) == TFWeaponSlot_Melee) {
+		// display shield if player has their melee weapon out on demoman
+		int shield = TF2_GetPlayerLoadoutSlot(client, 1);
+		char ohvm[PLATFORM_MAX_PATH];
+		if (TF2CustAttr_GetString(shield, "clientmodel override", ohvm, sizeof(ohvm))
+				&& FileExists(ohvm, true)) {
+			PrecacheModel(ohvm);
+			
+			int offhandwearable = TF2_SpawnWearableViewmodel();
+			
+			SetEntityModel(offhandwearable, ohvm);
+			TF2_EquipPlayerWearable(client, offhandwearable);
+			
+			g_iLastOffHandViewmodelRef[client] = EntIndexToEntRef(offhandwearable);
+			
+			bNeedsArmVM = true;
+		}
+	}
+	
+	if (!bNeedsArmVM) {
+		// we need to attach arm viewmodels if we render a new weapon viewmodel
+		// or if we have something attached to our offhand
+		return;
+	}
+	
+	char armvmPath[PLATFORM_MAX_PATH];
+	if (GetArmViewModel(client, armvmPath, sizeof(armvmPath))) {
+		// armvmPath might not be precached on the server
+		// mainly an issue with the gunslinger variation of the arm model
+		PrecacheModel(armvmPath);
+		
+		int armvm = TF2_SpawnWearableViewmodel();
+		
+		SetEntityModel(armvm, armvmPath);
+		TF2_EquipPlayerWearable(client, armvm);
+		
+		g_iLastArmModelRef[client] = EntIndexToEntRef(armvm);
+		
+		int clientView = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
+		SetEntProp(clientView, Prop_Send, "m_fEffects", EF_NODRAW);
+		
+		if (!vm[0]) {
+			// we didn't create a custom weapon viewmodel, so we need to render one for the
+			// weapon
+			int itemdef = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+			
+			if (!TF2Econ_GetItemDefinitionString(itemdef, "model_player", vm, sizeof(vm))) {
+				return;
+			}
+			
+			PrecacheModel(vm);
+			
+			int weaponvm = TF2_SpawnWearableViewmodel();
+			
+			SetEntityModel(weaponvm, vm);
+			TF2_EquipPlayerWearable(client, weaponvm);
+			
+			g_iLastViewmodelRef[client] = EntIndexToEntRef(weaponvm);
+		}
 	}
 }
 
@@ -224,6 +278,10 @@ void DetachVMs(int client) {
 		if (IsValidEntity(activeWeapon)) {
 			SetEntityRenderMode(activeWeapon, RENDER_NORMAL);
 		}
+	}
+	int lastOffHandViewmodel = EntRefToEntIndex(g_iLastOffHandViewmodelRef[client]);
+	if (IsValidEntity(lastOffHandViewmodel)) {
+		TF2_RemoveWearable(client, lastOffHandViewmodel);
 	}
 	
 	int clientView = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
