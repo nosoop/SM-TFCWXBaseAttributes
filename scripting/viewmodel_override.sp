@@ -44,7 +44,6 @@ public void OnMapStart() {
 			OnClientPutInServer(i);
 		}
 	}
-	
 	HookEvent("post_inventory_application", OnInventoryAppliedPost);
 	HookEvent("player_sapped_object", OnObjectSappedPost);
 }
@@ -70,7 +69,7 @@ public void OnEntityCreated(int entity, const char[] className) {
 /**
  * Sets the world model of a dropped weapon.
  */
-public void OnDroppedWeaponSpawnPost(int weapon) {
+void OnDroppedWeaponSpawnPost(int weapon) {
 	char wm[PLATFORM_MAX_PATH];
 	if (TF2CustAttr_GetString(weapon, "clientmodel override", wm, sizeof(wm))
 			|| TF2CustAttr_GetString(weapon, "worldmodel override", wm, sizeof(wm))) {
@@ -84,7 +83,7 @@ public void OnDroppedWeaponSpawnPost(int weapon) {
  * applying weapons by this time; however, they should implicitly invoke WeaponSwitchPost
  * (because of GiveNamedItem, etc.) so viewmodels should be correct.
  */
-public void OnInventoryAppliedPost(Event event, const char[] name, bool dontBroadcast) {
+void OnInventoryAppliedPost(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	if (!client) {
 		return;
@@ -98,7 +97,7 @@ public void OnInventoryAppliedPost(Event event, const char[] name, bool dontBroa
 /**
  * Called on weapon switch.  Detaches any old viewmodel overrides and attaches replacements.
  */
-public void OnWeaponSwitchPost(int client, int weapon) {
+void OnWeaponSwitchPost(int client, int weapon) {
 	DetachVMs(client);
 	
 	bool bNeedsArmVM;
@@ -208,7 +207,7 @@ public void OnWeaponSwitchPost(int client, int weapon) {
 /**
  * Allows the use of custom models on sappers attached to buildings.
  */
-public void OnObjectSappedPost(Event event, const char[] name, bool dontBroadcast) {
+void OnObjectSappedPost(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	if (!IsValidEntity(client)) {
 		return;
