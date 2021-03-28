@@ -30,6 +30,12 @@
 #define EF_NODRAW (1 << 5)
 #define EF_BONEMERGE_FASTCULL (1 << 7)
 
+#define MODEL_NONE_ACTIVE    0
+#define MODEL_VIEW_ACTIVE    (1 << 0)
+#define MODEL_ARM_ACTIVE     (1 << 1)
+#define MODEL_WORLD_ACTIVE   (1 << 2)
+#define MODEL_OFFHAND_ACTIVE (1 << 3)
+
 #define TF_ITEM_DEFINDEX_GUNSLINGER 142
 
 int g_iLastViewmodelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
@@ -100,7 +106,7 @@ void OnInventoryAppliedPost(Event event, const char[] name, bool dontBroadcast) 
 void OnWeaponSwitchPost(int client, int weapon) {
 	DetachVMs(client);
 	
-	bool bNeedsArmVM;
+	int bitsActiveModels = MODEL_NONE_ACTIVE;
 	
 	char cm[PLATFORM_MAX_PATH];
 	TF2CustAttr_GetString(weapon, "clientmodel override", cm, sizeof(cm));
@@ -118,8 +124,7 @@ void OnWeaponSwitchPost(int client, int weapon) {
 		TF2Util_EquipPlayerWearable(client, weaponvm);
 		
 		g_iLastViewmodelRef[client] = EntIndexToEntRef(weaponvm);
-		
-		bNeedsArmVM = true;
+		bitsActiveModels |= MODEL_VIEW_ACTIVE;
 	}
 	
 	char wm[PLATFORM_MAX_PATH];
@@ -137,6 +142,8 @@ void OnWeaponSwitchPost(int client, int weapon) {
 		
 		SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(weapon, 0, 0, 0, 0);
+		
+		bitsActiveModels |= MODEL_WORLD_ACTIVE;
 	}
 	
 	if (TF2_GetPlayerClass(client) == TFClass_DemoMan && TF2Util_IsEntityWeapon(weapon)
@@ -157,11 +164,11 @@ void OnWeaponSwitchPost(int client, int weapon) {
 			
 			SetEntityModel(shield, ohvm);
 			
-			bNeedsArmVM = true;
+			bitsActiveModels |= MODEL_OFFHAND_ACTIVE;
 		}
 	}
 	
-	if (!bNeedsArmVM) {
+	if (bitsActiveModels & (MODEL_VIEW_ACTIVE | MODEL_OFFHAND_ACTIVE) == 0) {
 		// we need to attach arm viewmodels if we render a new weapon viewmodel
 		// or if we have something attached to our offhand
 		return;
@@ -200,6 +207,8 @@ void OnWeaponSwitchPost(int client, int weapon) {
 			TF2Util_EquipPlayerWearable(client, weaponvm);
 			
 			g_iLastViewmodelRef[client] = EntIndexToEntRef(weaponvm);
+			
+			bitsActiveModels |= MODEL_ARM_ACTIVE;
 		}
 	}
 }
