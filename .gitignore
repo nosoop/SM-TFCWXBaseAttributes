@@ -1,0 +1,12 @@
+# Ignore ad-hoc compiled SourceMod plugins
+*.smx
+
+# Ignore build outputs
+build/
+
+**/__pycache__
+build.ninja
+
+# Ignore personal configuration files copied from contrib
+/modd.conf
+/uploader.ini
