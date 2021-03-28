@@ -237,13 +237,13 @@ bool SetWeaponWorldModel(int weapon, const char[] worldmodel) {
 	}
 	
 	/**
-	 * setting m_nModelIndexOverrides[0] causes firing animations to break, but prevents the
+	 * setting m_nModelIndexOverrides causes firing animations to break, but prevents the
 	 * weapon from showing up with the overwritten model in taunts
 	 * 
 	 * to display the overwritten world model on dropped items see OnDroppedWeaponSpawnPost
 	 */
 	for (int i = 1; i < GetEntPropArraySize(weapon, Prop_Send, "m_nModelIndexOverrides"); i++) {
-		SetEntProp(weapon, Prop_Send, "m_nModelIndexOverrides", model, .element = i);
+		// SetEntProp(weapon, Prop_Send, "m_nModelIndexOverrides", model, .element = i);
 	}
 	return true;
 }
