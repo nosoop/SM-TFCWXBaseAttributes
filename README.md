@@ -8,12 +8,19 @@ preventing their use with other plugins.
 
 [Custom Weapons X]: https://github.com/nosoop/SM-TFCustomWeaponsX
 
+## Dependencies
+
+In addition to Custom Attributes, you'll need:
+
+- [Econ Data](https://github.com/nosoop/SM-TFEconData)
+- [TF2Utils](https://github.com/nosoop/SM-TFUtils) (0.11.0 or newer)
+
 ## Attributes
 
 ### Weapon models
 
-Contains three different attributes: `clientmodel override`, `viewmodel override`, and
-`worldmodel override`.
+`viewmodel_override.smx` provides three different attributes: `clientmodel override`,
+`viewmodel override`, and `worldmodel override`.
 
 - Overwrites the view / worldmodel on the weapon.  `clientmodel override` takes priority and
 sets both of those.
