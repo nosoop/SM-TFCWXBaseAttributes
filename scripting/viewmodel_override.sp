@@ -149,7 +149,8 @@ void OnWeaponSwitchPost(int client, int weapon) {
 		// display shield if player has their melee weapon out on demoman
 		int shield = TF2Util_GetPlayerLoadoutEntity(client, 1);
 		char ohvm[PLATFORM_MAX_PATH];
-		if (TF2CustAttr_GetString(shield, "clientmodel override", ohvm, sizeof(ohvm))
+		if (IsValidEntity(shield) && TF2Util_IsEntityWearable(shield)
+				&& TF2CustAttr_GetString(shield, "clientmodel override", ohvm, sizeof(ohvm))
 				&& FileExists(ohvm, true)) {
 			PrecacheModel(ohvm);
 			
