@@ -26,9 +26,7 @@
 
 #include <tf2utils>
 
-#define EF_BONEMERGE (1 << 0)
 #define EF_NODRAW (1 << 5)
-#define EF_BONEMERGE_FASTCULL (1 << 7)
 
 #define MODEL_NONE_ACTIVE    0
 #define MODEL_VIEW_ACTIVE    (1 << 0)
@@ -190,7 +188,9 @@ void OnWeaponSwitchPost(int client, int weapon) {
 		int clientView = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
 		SetEntProp(clientView, Prop_Send, "m_fEffects", EF_NODRAW);
 		
-		if (!vm[0]) {
+		bitsActiveModels |= MODEL_ARM_ACTIVE;
+		
+		if (bitsActiveModels & MODEL_VIEW_ACTIVE == 0) {
 			// we didn't create a custom weapon viewmodel, so we need to render the original one
 			// for that weapon
 			int itemdef = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
@@ -208,7 +208,7 @@ void OnWeaponSwitchPost(int client, int weapon) {
 			
 			g_iLastViewmodelRef[client] = EntIndexToEntRef(weaponvm);
 			
-			bitsActiveModels |= MODEL_ARM_ACTIVE;
+			bitsActiveModels |= MODEL_VIEW_ACTIVE;
 		}
 	}
 }
