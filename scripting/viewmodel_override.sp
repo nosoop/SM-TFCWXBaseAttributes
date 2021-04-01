@@ -36,6 +36,8 @@
 
 #define TF_ITEM_DEFINDEX_GUNSLINGER 142
 
+bool g_bIgnoreWeaponSwitch[MAXPLAYERS + 1];
+
 int g_iLastViewmodelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 int g_iLastArmModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 int g_iLastWorldModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
@@ -48,7 +50,7 @@ public void OnMapStart() {
 			OnClientPutInServer(i);
 		}
 	}
-	HookEvent("post_inventory_application", OnInventoryAppliedPost);
+	HookEvent("post_inventory_application", OnInventoryAppliedPre, EventHookMode_Pre);
 	HookEvent("player_sapped_object", OnObjectSappedPost);
 }
 
@@ -61,6 +63,8 @@ public void OnPluginEnd() {
 }
 
 public void OnClientPutInServer(int client) {
+	SDKHook(client, SDKHook_Spawn, OnPlayerSpawnPre);
+	SDKHook(client, SDKHook_SpawnPost, OnPlayerSpawnPost);
 	SDKHook(client, SDKHook_WeaponSwitchPost, OnWeaponSwitchPost);
 }
 
@@ -87,21 +91,44 @@ void OnDroppedWeaponSpawnPost(int weapon) {
  * applying weapons by this time; however, they should implicitly invoke WeaponSwitchPost
  * (because of GiveNamedItem, etc.) so viewmodels should be correct.
  */
-void OnInventoryAppliedPost(Event event, const char[] name, bool dontBroadcast) {
+void OnInventoryAppliedPre(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	if (!client) {
 		return;
 	}
-	int activeWeapon = TF2_GetClientActiveWeapon(client);
-	if (IsValidEntity(activeWeapon)) {
-		OnWeaponSwitchPost(client, activeWeapon);
-	}
+	UpdateClientWeaponModel(client);
+	
+	/**
+	 * start processing weapon switches, since other plugins may be equipping new weapons in
+	 * post_inventory_application -- and that's still within the player's spawn function call
+	 */
+	g_bIgnoreWeaponSwitch[client] = false;
 }
+
+Action OnPlayerSpawnPre(int client) {
+	g_bIgnoreWeaponSwitch[client] = true;
+	return Plugin_Continue;
+}
+
+void OnPlayerSpawnPost(int client) {
+	g_bIgnoreWeaponSwitch[client] = false;
+}
+
+void OnWeaponSwitchPost(int client, int weapon) {
+	if (!g_bIgnoreWeaponSwitch[client]) {
+		UpdateClientWeaponModel(client);
+	}
+ }
 
 /**
  * Called on weapon switch.  Detaches any old viewmodel overrides and attaches replacements.
  */
-void OnWeaponSwitchPost(int client, int weapon) {
+void UpdateClientWeaponModel(int client) {
+	int weapon = TF2_GetClientActiveWeapon(client);
+	if (!IsValidEntity(weapon)) {
+		return;
+	}
+	
 	DetachVMs(client);
 	
 	int bitsActiveModels = MODEL_NONE_ACTIVE;
