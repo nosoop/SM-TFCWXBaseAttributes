@@ -137,8 +137,8 @@ void UpdateClientWeaponModel(int client) {
 	TF2CustAttr_GetString(weapon, "clientmodel override", cm, sizeof(cm));
 	
 	char vm[PLATFORM_MAX_PATH];
-	strcopy(vm, sizeof(vm), cm);
-	if ((strlen(vm) || TF2CustAttr_GetString(weapon, "viewmodel override", vm, sizeof(vm)))
+	if ((strcopy(vm, sizeof(vm), cm)
+			|| TF2CustAttr_GetString(weapon, "viewmodel override", vm, sizeof(vm)))
 			&& FileExists(vm, true)) {
 		// override viewmodel by attaching arm and weapon viewmodels
 		PrecacheModel(vm);
@@ -153,8 +153,8 @@ void UpdateClientWeaponModel(int client) {
 	}
 	
 	char wm[PLATFORM_MAX_PATH];
-	strcopy(wm, sizeof(wm), cm);
-	if (strlen(wm) || TF2CustAttr_GetString(weapon, "worldmodel override", wm, sizeof(wm))) {
+	if (strcopy(wm, sizeof(wm), cm)
+			|| TF2CustAttr_GetString(weapon, "worldmodel override", wm, sizeof(wm))) {
 		// this allows other players to see the given weapon with the correct model
 		SetWeaponWorldModel(weapon, wm);
 		
