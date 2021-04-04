@@ -163,9 +163,6 @@ void UpdateClientWeaponModel(int client) {
 		TF2Util_EquipPlayerWearable(client, weaponwm);
 		g_iLastWorldModelRef[client] = EntIndexToEntRef(weaponwm);
 		
-		SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
-		SetEntityRenderColor(weapon, 0, 0, 0, 0);
-		
 		bitsActiveModels |= MODEL_WORLD_ACTIVE;
 	}
 	
@@ -198,6 +195,12 @@ void UpdateClientWeaponModel(int client) {
 		return;
 	}
 	
+	/**
+	 * this prevents the weapon from being drawn in first-person without modifying rendering
+	 * properties that cause lighting quirks (setting VM to nodraw and weapon to transparent)
+	 */
+	SetEntProp(weapon, Prop_Send, "m_bBeingRepurposedForTaunt", true);
+	
 	char armvmPath[PLATFORM_MAX_PATH];
 	if (GetArmViewModel(client, armvmPath, sizeof(armvmPath))) {
 		// armvmPath might not be precached on the server
@@ -210,9 +213,6 @@ void UpdateClientWeaponModel(int client) {
 		TF2Util_EquipPlayerWearable(client, armvm);
 		
 		g_iLastArmModelRef[client] = EntIndexToEntRef(armvm);
-		
-		int clientView = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
-		SetEntProp(clientView, Prop_Send, "m_fEffects", EF_NODRAW);
 		
 		bitsActiveModels |= MODEL_ARM_ACTIVE;
 		
@@ -298,6 +298,13 @@ bool SetAttachedSapperModel(int sapper, const char[] worldmodel) {
  * Detaches any custom viewmodels on the client and displays the original viewmodel.
  */
 void DetachVMs(int client) {
+	for (int i; i < 7; i++) {
+		int weapon = GetPlayerWeaponSlot(client, i);
+		if (IsValidEntity(weapon)) {
+			SetEntProp(weapon, Prop_Send, "m_bBeingRepurposedForTaunt", false);
+		}
+	}
+	
 	MaybeRemoveWearable(client, g_iLastViewmodelRef[client]);
 	MaybeRemoveWearable(client, g_iLastArmModelRef[client]);
 	
@@ -309,11 +316,6 @@ void DetachVMs(int client) {
 	}
 	
 	MaybeRemoveWearable(client, g_iLastOffHandViewmodelRef[client]);
-	
-	int clientView = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
-	if (IsValidEntity(clientView)) {
-		SetEntProp(clientView, Prop_Send, "m_fEffects", 0);
-	}
 }
 
 /**
