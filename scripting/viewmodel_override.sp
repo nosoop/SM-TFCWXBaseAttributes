@@ -75,6 +75,36 @@ public void OnEntityCreated(int entity, const char[] className) {
 }
 
 /**
+ * Hides our original weapon in local third-person if we have a worldmodel assigned.
+ */
+public void TF2_OnConditionAdded(int client, TFCond condition) {
+	if (condition != TFCond_Taunting || !IsValidEntity(g_iLastViewmodelRef[client])) {
+		return;
+	}
+	
+	int weapon = TF2_GetClientActiveWeapon(client);
+	if (IsValidEntity(weapon)) {
+		SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
+		SetEntityRenderColor(weapon, .a = 0);
+	}
+}
+
+/**
+ * Rehides the original weapon in local first-person if we have a viewmodel assigned.
+ */
+public void TF2_OnConditionRemoved(int client, TFCond condition) {
+	if (condition != TFCond_Taunting || !IsValidEntity(g_iLastViewmodelRef[client])) {
+		return;
+	}
+	
+	int weapon = TF2_GetClientActiveWeapon(client);
+	if (IsValidEntity(weapon)) {
+		SetEntityRenderMode(weapon, RENDER_NORMAL);
+		SetEntProp(weapon, Prop_Send, "m_bBeingRepurposedForTaunt", true);
+	}
+}
+
+/**
  * Sets the world model of a dropped weapon.
  */
 void OnDroppedWeaponSpawnPost(int weapon) {
