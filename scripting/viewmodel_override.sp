@@ -124,12 +124,12 @@ void OnWeaponSwitchPost(int client, int weapon) {
  * Called on weapon switch.  Detaches any old viewmodel overrides and attaches replacements.
  */
 void UpdateClientWeaponModel(int client) {
+	DetachVMs(client);
+	
 	int weapon = TF2_GetClientActiveWeapon(client);
 	if (!IsValidEntity(weapon)) {
 		return;
 	}
-	
-	DetachVMs(client);
 	
 	int bitsActiveModels = MODEL_NONE_ACTIVE;
 	
