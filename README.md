@@ -29,6 +29,9 @@ sets both of those.
   - Viewmodels are applied on weapon switch.
 - Attribute value is a full path to a model file (e.g. `models/weapons/.../c_myweapon.mdl`).
 
+Thanks to @Zabaniya001 for the code related to setting up models so they don't have lighting
+issues.
+
 [File Precacher]: https://forums.alliedmods.net/showpost.php?p=2634602&postcount=484
 
 ## License
