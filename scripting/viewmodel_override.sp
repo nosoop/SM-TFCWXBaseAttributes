@@ -183,8 +183,7 @@ void UpdateClientWeaponModel(int client) {
 		bitsActiveModels |= MODEL_WORLD_ACTIVE;
 	}
 	
-	if (TF2_GetPlayerClass(client) == TFClass_DemoMan && TF2Util_IsEntityWeapon(weapon)
-			&& TF2Util_GetWeaponSlot(weapon) == TFWeaponSlot_Melee) {
+	if (TF2_GetPlayerClass(client) == TFClass_DemoMan) {
 		// display shield if player has their melee weapon out on demoman
 		int shield = TF2Util_GetPlayerLoadoutEntity(client, 1);
 		char ohvm[PLATFORM_MAX_PATH];
@@ -192,17 +191,19 @@ void UpdateClientWeaponModel(int client) {
 				&& TF2CustAttr_GetString(shield, "clientmodel override", ohvm, sizeof(ohvm))
 				&& FileExists(ohvm, true)) {
 			PrecacheModel(ohvm);
-			
-			int offhandwearable = TF2_SpawnWearableViewmodel();
-			
-			SetEntityModel(offhandwearable, ohvm);
-			TF2Util_EquipPlayerWearable(client, offhandwearable);
-			
-			g_iLastOffHandViewmodelRef[client] = EntIndexToEntRef(offhandwearable);
-			
 			SetEntityModel(shield, ohvm);
 			
-			bitsActiveModels |= MODEL_OFFHAND_ACTIVE;
+			if (TF2Util_IsEntityWeapon(weapon)
+					&& TF2Util_GetWeaponSlot(weapon) == TFWeaponSlot_Melee) {
+				int offhandwearable = TF2_SpawnWearableViewmodel();
+				
+				SetEntityModel(offhandwearable, ohvm);
+				
+				TF2Util_EquipPlayerWearable(client, offhandwearable);
+				g_iLastOffHandViewmodelRef[client] = EntIndexToEntRef(offhandwearable);
+				
+				bitsActiveModels |= MODEL_OFFHAND_ACTIVE;
+			}
 		}
 	}
 	
