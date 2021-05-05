@@ -50,6 +50,7 @@ public void OnMapStart() {
 			OnClientPutInServer(i);
 		}
 	}
+	HookEvent("player_death", OnPlayerDeath);
 	HookEvent("post_inventory_application", OnInventoryAppliedPre, EventHookMode_Pre);
 	HookEvent("player_sapped_object", OnObjectSappedPost);
 }
@@ -236,6 +237,16 @@ void UpdateClientWeaponModel(int client) {
 			
 			bitsActiveModels |= MODEL_VIEW_ACTIVE;
 		}
+	}
+}
+
+/**
+ * Destroys wearable worldmodels on death so ragdolls aren't holding them.
+ */
+void OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	if (client) {
+		MaybeRemoveWearable(client, g_iLastWorldModelRef[client]);
 	}
 }
 
