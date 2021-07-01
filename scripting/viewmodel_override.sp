@@ -76,6 +76,16 @@ public void OnEntityCreated(int entity, const char[] className) {
 }
 
 /**
+ * Hotfix to ensure any attached Sniper Rifle is rendered when coming out of being in scope.
+ */
+public void TF2_OnConditionRemoved(int client, TFCond cond) {
+	if (cond == TFCond_Slowed && TF2_GetPlayerClass(client) == TFClass_Sniper
+			&& IsValidEntity(g_iLastViewmodelRef[client])) {
+		UpdateClientWeaponModel(client);
+	}
+}
+
+/**
  * Sets the world model of a dropped weapon.
  */
 void OnDroppedWeaponSpawnPost(int weapon) {
