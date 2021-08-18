@@ -10,6 +10,13 @@
  * sappers.
  * - "clientmodel override" can be used in place of both if they share the same model, and will
  * take priority.
+ *
+ * Okay, so this is a rather awful mix of the main and lighting fix branch code. I got the worldmodel to not show,
+ * and the weapon to not be attached when dead. Still trying to figure out how to properly -
+ * convert over the sniper fix, since i have a surface level understanding of sourcepawn.
+ * a lot of these changes are guesses based on what i'd do in lua, considering my -
+ * "expertise" is in making garrys mod addons. what im doing here is the equivalent of throwing a rock and seeing -
+ * where it lands.
  */
 #pragma semicolon 1
 #include <sourcemod>
@@ -38,8 +45,11 @@
 
 bool g_bIgnoreWeaponSwitch[MAXPLAYERS + 1];
 
+
 int g_iLastViewmodelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+
 int g_iLastWorldModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+
 
 int g_iLastOffHandViewmodelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 
@@ -49,6 +59,7 @@ public void OnMapStart() {
 			OnClientPutInServer(i);
 		}
 	}
+	HookEvent("player_death", OnPlayerDeath);
 	HookEvent("post_inventory_application", OnInventoryAppliedPre, EventHookMode_Pre);
 	HookEvent("player_sapped_object", OnObjectSappedPost);
 }
@@ -134,11 +145,6 @@ void OnInventoryAppliedPre(Event event, const char[] name, bool dontBroadcast) {
 	g_bIgnoreWeaponSwitch[client] = false;
 }
 
-/**
- * When the player is spawning, the game spends some time checking the player's weapons for
- * validity.  This fires off a bunch of weapon switch events, so we don't bother checking early
- * in the function.
- */
 Action OnPlayerSpawnPre(int client) {
 	g_bIgnoreWeaponSwitch[client] = true;
 	return Plugin_Continue;
@@ -179,10 +185,9 @@ void UpdateClientWeaponModel(int client) {
 		int weaponvm = TF2_SpawnWearableViewmodel();
 		
 		SetEntityModel(weaponvm, vm);
-		
 		TF2Util_EquipPlayerWearable(client, weaponvm);
-		g_iLastViewmodelRef[client] = EntIndexToEntRef(weaponvm);
 		
+		g_iLastViewmodelRef[client] = EntIndexToEntRef(weaponvm);
 		bitsActiveModels |= MODEL_VIEW_ACTIVE;
 	}
 	
@@ -198,10 +203,14 @@ void UpdateClientWeaponModel(int client) {
 		TF2Util_EquipPlayerWearable(client, weaponwm);
 		g_iLastWorldModelRef[client] = EntIndexToEntRef(weaponwm);
 		
+		SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
+		SetEntityRenderColor(weapon, 0, 0, 0, 0);
+		
 		bitsActiveModels |= MODEL_WORLD_ACTIVE;
 	}
 	
-	if (TF2_GetPlayerClass(client) == TFClass_DemoMan) {
+	if (TF2_GetPlayerClass(client) == TFClass_DemoMan && TF2Util_IsEntityWeapon(weapon)
+			&& TF2Util_GetWeaponSlot(weapon) == TFWeaponSlot_Melee) {
 		// display shield if player has their melee weapon out on demoman
 		int shield = TF2Util_GetPlayerLoadoutEntity(client, 1);
 		char ohvm[PLATFORM_MAX_PATH];
@@ -209,19 +218,17 @@ void UpdateClientWeaponModel(int client) {
 				&& TF2CustAttr_GetString(shield, "clientmodel override", ohvm, sizeof(ohvm))
 				&& FileExists(ohvm, true)) {
 			PrecacheModel(ohvm);
+			
+			int offhandwearable = TF2_SpawnWearableViewmodel();
+			
+			SetEntityModel(offhandwearable, ohvm);
+			TF2Util_EquipPlayerWearable(client, offhandwearable);
+			
+			g_iLastOffHandViewmodelRef[client] = EntIndexToEntRef(offhandwearable);
+			
 			SetEntityModel(shield, ohvm);
 			
-			if (TF2Util_IsEntityWeapon(weapon)
-					&& TF2Util_GetWeaponSlot(weapon) == TFWeaponSlot_Melee) {
-				int offhandwearable = TF2_SpawnWearableViewmodel();
-				
-				SetEntityModel(offhandwearable, ohvm);
-				
-				TF2Util_EquipPlayerWearable(client, offhandwearable);
-				g_iLastOffHandViewmodelRef[client] = EntIndexToEntRef(offhandwearable);
-				
-				bitsActiveModels |= MODEL_OFFHAND_ACTIVE;
-			}
+			bitsActiveModels |= MODEL_OFFHAND_ACTIVE;
 		}
 	}
 	
@@ -254,6 +261,16 @@ void UpdateClientWeaponModel(int client) {
 		g_iLastViewmodelRef[client] = EntIndexToEntRef(weaponvm);
 		
 		bitsActiveModels |= MODEL_VIEW_ACTIVE;
+	}
+}
+
+/**
+ * Destroys wearable worldmodels on death so ragdolls aren't holding them.
+ */
+void OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	if (client) {
+		MaybeRemoveWearable(client, g_iLastWorldModelRef[client]);
 	}
 }
 
