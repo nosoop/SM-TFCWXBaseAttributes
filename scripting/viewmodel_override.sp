@@ -92,8 +92,10 @@ void OnDroppedWeaponSpawnPost(int weapon) {
 	char wm[PLATFORM_MAX_PATH];
 	if (TF2CustAttr_GetString(weapon, "clientmodel override", wm, sizeof(wm))
 			|| TF2CustAttr_GetString(weapon, "worldmodel override", wm, sizeof(wm))) {
-		SetEntityModel(weapon, wm);
-		SetWeaponWorldModel(weapon, wm);
+		if (FileExists(wm, true)) {
+			SetEntityModel(weapon, wm);
+			SetWeaponWorldModel(weapon, wm);
+		}
 	}
 }
 
@@ -163,7 +165,8 @@ void UpdateClientWeaponModel(int client) {
 	}
 	
 	char wm[PLATFORM_MAX_PATH];
-	if (TF2CustAttr_GetString(weapon, "worldmodel override", wm, sizeof(wm), cm)) {
+	if (TF2CustAttr_GetString(weapon, "worldmodel override", wm, sizeof(wm), cm)
+			&& FileExists(wm, true)) {
 		// this allows other players to see the given weapon with the correct model
 		SetWeaponWorldModel(weapon, wm);
 		
@@ -203,9 +206,10 @@ void UpdateClientWeaponModel(int client) {
 		}
 	}
 	
-	if (bitsActiveModels & (MODEL_VIEW_ACTIVE | MODEL_OFFHAND_ACTIVE) == 0) {
+	if (bitsActiveModels & (MODEL_VIEW_ACTIVE | MODEL_OFFHAND_ACTIVE | MODEL_WORLD_ACTIVE) == 0) {
 		// we need to attach arm viewmodels if we render a new weapon viewmodel
 		// or if we have something attached to our offhand
+		// ... or if we have a new worldmodel as of the 2021-06-22 update
 		return;
 	}
 	
