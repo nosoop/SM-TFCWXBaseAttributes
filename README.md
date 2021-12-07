@@ -24,8 +24,9 @@ In addition to Custom Attributes, you'll need:
 
 - Overwrites the view / worldmodel on the weapon.  `clientmodel override` takes priority and
 sets both of those.
-  - This plugin does not mark resources for download.  Use something like
-  [this plugin][File Precacher] to handle this.
+  - **This plugin does not mark resources for download.**  Attribute values are evaluated at
+  runtime; it has no knowledge of possible values on level startup.  Use something like this
+  [File Precacher][] plugin to mark your custom resources for download by other game clients.
   - Viewmodels are applied on weapon switch.
 - Attribute value is a full path to a model file (e.g. `models/weapons/.../c_myweapon.mdl`).
 
