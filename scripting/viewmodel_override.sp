@@ -207,17 +207,20 @@ void UpdateClientWeaponModel(int client) {
 		}
 	}
 	
-	if (bitsActiveModels & (MODEL_VIEW_ACTIVE | MODEL_OFFHAND_ACTIVE | MODEL_WORLD_ACTIVE) == 0) {
+	char armvmPath[PLATFORM_MAX_PATH];
+	if (!TF2CustAttr_GetString(weapon, "arm model override", armvmPath, sizeof(armvmPath))
+			&& bitsActiveModels & (MODEL_VIEW_ACTIVE | MODEL_OFFHAND_ACTIVE | MODEL_WORLD_ACTIVE) == 0) {
 		// we need to attach arm viewmodels if we render a new weapon viewmodel
 		// or if we have something attached to our offhand
 		// ... or if we have a new worldmodel as of the 2021-06-22 update
+		// ... or if we are using a custom arm model
 		return;
 	}
 	
-	char armvmPath[PLATFORM_MAX_PATH];
-	if (GetArmViewModel(client, armvmPath, sizeof(armvmPath))) {
+	if ((armvmPath[0] || GetArmViewModel(client, armvmPath, sizeof(armvmPath)))
+			&& FileExists(armvmPath, true)) {
 		// armvmPath might not be precached on the server
-		// mainly an issue with the gunslinger variation of the arm model
+		// mainly an issue with the gunslinger variation of the arm model for stock
 		PrecacheModel(armvmPath);
 		
 		int armvm = TF2_SpawnWearableViewmodel();
