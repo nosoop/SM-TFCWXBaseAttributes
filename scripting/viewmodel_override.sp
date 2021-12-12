@@ -215,7 +215,11 @@ void UpdateClientWeaponModel(int client) {
 	}
 	
 	char armvmPath[PLATFORM_MAX_PATH];
-	if (GetArmViewModel(client, armvmPath, sizeof(armvmPath))) {
+	if (!TF2CustAttr_GetString(weapon, "arm model override", armvmPath, sizeof(armvmPath))) {
+		GetArmViewModel(client, armvmPath, sizeof(armvmPath));
+	}
+
+	if (FileExists(armvmPath, true)) {
 		// armvmPath might not be precached on the server
 		// mainly an issue with the gunslinger variation of the arm model
 		PrecacheModel(armvmPath);
