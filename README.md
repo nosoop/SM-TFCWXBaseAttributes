@@ -30,6 +30,9 @@ sets both of those.
   - Viewmodels are applied on weapon switch.
 - Attribute value is a full path to a model file (e.g. `models/weapons/.../c_myweapon.mdl`).
 
+It also implements `arm model override`, which allows for visual replacements of the arm models.
+Animations are inherited from the original arms.  This is quite cursed.
+
 [File Precacher]: https://forums.alliedmods.net/showpost.php?p=2634602&postcount=484
 
 ## License
