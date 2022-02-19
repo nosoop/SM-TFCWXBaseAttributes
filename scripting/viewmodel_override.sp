@@ -51,7 +51,7 @@ public void OnMapStart() {
 		}
 	}
 	HookEvent("player_death", OnPlayerDeath);
-	HookEvent("post_inventory_application", OnInventoryAppliedPre, EventHookMode_Pre);
+	HookEvent("post_inventory_application", OnInventoryAppliedPost);
 	HookEvent("player_sapped_object", OnObjectSappedPost);
 }
 
@@ -104,7 +104,7 @@ void OnDroppedWeaponSpawnPost(int weapon) {
  * applying weapons by this time; however, they should implicitly invoke WeaponSwitchPost
  * (because of GiveNamedItem, etc.) so viewmodels should be correct.
  */
-void OnInventoryAppliedPre(Event event, const char[] name, bool dontBroadcast) {
+void OnInventoryAppliedPost(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	if (!client) {
 		return;
