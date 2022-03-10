@@ -44,6 +44,8 @@ int g_iLastWorldModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 
 int g_iLastOffHandViewmodelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 
+StringMap g_MissingModels;
+
 public void OnMapStart() {
 	for (int i = 1; i <= MaxClients; i++) {
 		if (IsClientInGame(i)) {
@@ -53,6 +55,9 @@ public void OnMapStart() {
 	HookEvent("player_death", OnPlayerDeath);
 	HookEvent("post_inventory_application", OnInventoryAppliedPost);
 	HookEvent("player_sapped_object", OnObjectSappedPost);
+	
+	delete g_MissingModels;
+	g_MissingModels = new StringMap();
 }
 
 public void OnPluginEnd() {
@@ -151,7 +156,7 @@ void UpdateClientWeaponModel(int client) {
 	
 	char vm[PLATFORM_MAX_PATH];
 	if (TF2CustAttr_GetString(weapon, "viewmodel override", vm, sizeof(vm), cm)
-			&& FileExists(vm, true)) {
+			&& FileExistsAndLog(vm, true)) {
 		// override viewmodel by attaching arm and weapon viewmodels
 		PrecacheModel(vm);
 		
@@ -166,7 +171,7 @@ void UpdateClientWeaponModel(int client) {
 	
 	char wm[PLATFORM_MAX_PATH];
 	if (TF2CustAttr_GetString(weapon, "worldmodel override", wm, sizeof(wm), cm)
-			&& FileExists(wm, true)) {
+			&& FileExistsAndLog(wm, true)) {
 		// this allows other players to see the given weapon with the correct model
 		SetWeaponWorldModel(weapon, wm);
 		
@@ -189,7 +194,7 @@ void UpdateClientWeaponModel(int client) {
 		char ohvm[PLATFORM_MAX_PATH];
 		if (IsValidEntity(shield) && TF2Util_IsEntityWearable(shield)
 				&& TF2CustAttr_GetString(shield, "clientmodel override", ohvm, sizeof(ohvm))
-				&& FileExists(ohvm, true)) {
+				&& FileExistsAndLog(ohvm, true)) {
 			PrecacheModel(ohvm);
 			SetEntityModel(shield, ohvm);
 			
@@ -218,7 +223,7 @@ void UpdateClientWeaponModel(int client) {
 	}
 	
 	if ((armvmPath[0] || GetArmViewModel(client, armvmPath, sizeof(armvmPath)))
-			&& FileExists(armvmPath, true)) {
+			&& FileExistsAndLog(armvmPath, true)) {
 		// armvmPath might not be precached on the server
 		// mainly an issue with the gunslinger variation of the arm model for stock
 		PrecacheModel(armvmPath);
@@ -397,4 +402,18 @@ stock int TF2_SpawnWearableViewmodel() {
 		DispatchSpawn(wearable);
 	}
 	return wearable;
+}
+
+bool FileExistsAndLog(const char[] path, bool use_valve_fs = false,
+		const char[] valve_path_id = "GAME") {
+	if (FileExists(path, use_valve_fs, valve_path_id)) {
+		return true;
+	}
+	
+	any discarded;
+	if (!g_MissingModels.GetValue(path, discarded)) {
+		LogError("Missing file '%s'", path);
+		g_MissingModels.SetValue(path, true);
+	}
+	return false;
 }
