@@ -158,7 +158,7 @@ void UpdateClientWeaponModel(int client) {
 	if (TF2CustAttr_GetString(weapon, "viewmodel override", vm, sizeof(vm), cm)
 			&& FileExistsAndLog(vm, true)) {
 		// override viewmodel by attaching arm and weapon viewmodels
-		PrecacheModel(vm);
+		PrecacheModelAndLog(vm);
 		
 		int weaponvm = TF2_SpawnWearableViewmodel();
 		
@@ -195,7 +195,7 @@ void UpdateClientWeaponModel(int client) {
 		if (IsValidEntity(shield) && TF2Util_IsEntityWearable(shield)
 				&& TF2CustAttr_GetString(shield, "clientmodel override", ohvm, sizeof(ohvm))
 				&& FileExistsAndLog(ohvm, true)) {
-			PrecacheModel(ohvm);
+			PrecacheModelAndLog(ohvm);
 			SetEntityModel(shield, ohvm);
 			
 			if (TF2Util_IsEntityWeapon(weapon)
@@ -226,7 +226,7 @@ void UpdateClientWeaponModel(int client) {
 			&& FileExistsAndLog(armvmPath, true)) {
 		// armvmPath might not be precached on the server
 		// mainly an issue with the gunslinger variation of the arm model for stock
-		PrecacheModel(armvmPath);
+		PrecacheModelAndLog(armvmPath);
 		
 		int armvm = TF2_SpawnWearableViewmodel();
 		
@@ -249,7 +249,7 @@ void UpdateClientWeaponModel(int client) {
 				return;
 			}
 			
-			PrecacheModel(vm);
+			PrecacheModelAndLog(vm);
 			
 			int weaponvm = TF2_SpawnWearableViewmodel();
 			
@@ -300,7 +300,7 @@ bool SetWeaponWorldModel(int weapon, const char[] worldmodel) {
 		return false;
 	}
 	
-	int model = PrecacheModel(worldmodel);
+	int model = PrecacheModelAndLog(worldmodel);
 	if (HasEntProp(weapon, Prop_Send, "m_iWorldModelIndex")) {
 		SetEntProp(weapon, Prop_Send, "m_iWorldModelIndex", model);
 	}
@@ -416,4 +416,12 @@ bool FileExistsAndLog(const char[] path, bool use_valve_fs = false,
 		g_MissingModels.SetValue(path, true);
 	}
 	return false;
+}
+
+int PrecacheModelAndLog(const char[] model, bool preload = false) {
+	int modelIndex = PrecacheModel(model, preload);
+	if (!modelIndex) {
+		LogError("Failed to precache model '%s'", model);
+	}
+	return modelIndex;
 }
