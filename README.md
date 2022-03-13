@@ -27,6 +27,10 @@ sets both of those.
   - **This plugin does not mark resources for download.**  Attribute values are evaluated at
   runtime; it has no knowledge of possible values on level startup.  Use something like this
   [File Precacher][] plugin to mark your custom resources for download by other game clients.
+  - Make sure you've set `sv_pure` to allow custom files.  (Either set it to 0 or -1, or set it
+  to 1 and modify `cfg/pure_server_whitelist.txt` to specify the paths to your custom assets.
+  If you use a strict pure setting, do keep in mind that you cannot ensure that players haven't
+  replaced your custom models with something else on their client.)
   - Viewmodels are applied on weapon switch.
 - Attribute value is a full path to a model file (e.g. `models/weapons/.../c_myweapon.mdl`).
 
