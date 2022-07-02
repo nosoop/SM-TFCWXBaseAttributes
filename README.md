@@ -37,7 +37,17 @@ sets both of those.
 It also implements `arm model override`, which allows for visual replacements of the arm models.
 Animations are inherited from the original arms.  This is quite cursed.
 
+For known working models, use the ones in [this Workshop Weapons Pack][samplemodels].  You will
+need to do some additional work to use models intended as client-side replacements (e.g. those
+from GameBanana).  I can't help you there; that's outside the scope of this plugin.
+
 [File Precacher]: https://forums.alliedmods.net/showpost.php?p=2634602&postcount=484
+[samplemodels]: https://forums.alliedmods.net/showpost.php?p=2188941&postcount=246
+
+## Contributing
+
+Please do (but do file an issue first).  The only reason this repository is available is because
+CWX would be otherwise dead in the water if a viewmodel plugin didn't exist.
 
 ## License
 
