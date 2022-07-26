@@ -20,7 +20,6 @@
 #pragma newdecls required
 
 #include <tf_custom_attributes>
-#include <cwx>
 #include <stocksoup/tf/entity_prop_stocks>
 #include <stocksoup/tf/econ>
 #include <tf_econ_data>
@@ -191,12 +190,11 @@ void UpdateClientWeaponModel(int client) {
 	}
 
 	if(bitsActiveModels & (MODEL_VIEW_ACTIVE|MODEL_WORLD_ACTIVE) != 0) {
-		char uid[64];
-		if(CWX_GetItemUIDFromEntity(weapon, uid, sizeof(uid)) && CWX_IsItemUIDValid(uid)) {
+		KeyValues attrKv = TF2CustAttr_GetAttributeKeyValues(weapon);
+		if(attrKv) {
 			if(bitsActiveModels & MODEL_VIEW_ACTIVE != 0) {
-				KeyValues viewmodel_offset = CWX_GetItemExtData(uid, "viewmodel override offset");
-				if(viewmodel_offset) {
-					int weaponvm = EntRefToEntIndex(g_iLastViewmodelRef[client]);
+				if(attrKv.JumpToKey("viewmodel override offset")) {
+					int weaponvm = g_iLastViewmodelRef[client];
 
 					int weapomvm_effects = GetEntProp(weaponvm, Prop_Send, "m_fEffects");
 					weapomvm_effects &= ~EF_BONEMERGE;
@@ -209,24 +207,23 @@ void UpdateClientWeaponModel(int client) {
 					AcceptEntityInput(weaponvm, "SetParentAttachment");
 
 					float posOffset[3];
-					viewmodel_offset.GetVector("pos", posOffset);
+					attrKv.GetVector("pos", posOffset);
 					SetEntPropVector(weaponvm, Prop_Send, "m_vecOrigin", posOffset);
 
 					float angOffset[3];
-					viewmodel_offset.GetVector("ang", angOffset);
+					attrKv.GetVector("ang", angOffset);
 					SetEntPropVector(weaponvm, Prop_Send, "m_angRotation", angOffset);
 
-					float modelScale = viewmodel_offset.GetFloat("scale", 1.0);
+					float modelScale = attrKv.GetFloat("scale", 1.0);
 					SetEntPropFloat(weaponvm, Prop_Send, "m_flModelScale", modelScale);
 
-					delete viewmodel_offset;
+					attrKv.GoBack();
 				}
 			}
 
 			if(bitsActiveModels & MODEL_WORLD_ACTIVE != 0) {
-				KeyValues worldmodel_offset = CWX_GetItemExtData(uid, "worldmodel override offset");
-				if(worldmodel_offset) {
-					int weaponwm = EntRefToEntIndex(g_iLastWorldModelRef[client]);
+				if(attrKv.JumpToKey("worldmodel override offset")) {
+					int weaponwm = g_iLastWorldModelRef[client];
 
 					int weaponwm_effects = GetEntProp(weaponwm, Prop_Send, "m_fEffects");
 					weaponwm_effects &= ~EF_BONEMERGE;
@@ -239,19 +236,21 @@ void UpdateClientWeaponModel(int client) {
 					AcceptEntityInput(weaponwm, "SetParentAttachment");
 
 					float posOffset[3];
-					worldmodel_offset.GetVector("pos", posOffset);
+					attrKv.GetVector("pos", posOffset);
 					SetEntPropVector(weaponwm, Prop_Send, "m_vecOrigin", posOffset);
 
 					float angOffset[3];
-					worldmodel_offset.GetVector("ang", angOffset);
+					attrKv.GetVector("ang", angOffset);
 					SetEntPropVector(weaponwm, Prop_Send, "m_angRotation", angOffset);
 
-					float modelScale = worldmodel_offset.GetFloat("scale", 1.0);
+					float modelScale = attrKv.GetFloat("scale", 1.0);
 					SetEntPropFloat(weaponwm, Prop_Send, "m_flModelScale", modelScale);
 
-					delete worldmodel_offset;
+					attrKv.GoBack();
 				}
 			}
+
+			delete attrKv;
 		}
 	}
 	
