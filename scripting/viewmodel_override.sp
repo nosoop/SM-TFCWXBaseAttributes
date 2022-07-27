@@ -27,6 +27,7 @@
 #include <tf2utils>
 
 #define EF_NODRAW (1 << 5)
+#define EF_BONEMERGE (1 << 0)
 
 #define MODEL_NONE_ACTIVE    0
 #define MODEL_VIEW_ACTIVE    (1 << 0)
@@ -186,6 +187,68 @@ void UpdateClientWeaponModel(int client) {
 		SetEntityRenderColor(weapon, 0, 0, 0, 0);
 		
 		bitsActiveModels |= MODEL_WORLD_ACTIVE;
+	}
+	
+	if (bitsActiveModels & (MODEL_VIEW_ACTIVE | MODEL_WORLD_ACTIVE)) {
+		// custom view- / world- model positioning options
+		KeyValues attrKv = TF2CustAttr_GetAttributeKeyValues(weapon);
+		if (attrKv) {
+			if (bitsActiveModels & MODEL_VIEW_ACTIVE
+					&& attrKv.JumpToKey("viewmodel override offset")) {
+				int weaponvm = g_iLastViewmodelRef[client];
+				
+				int weapomvm_effects = GetEntProp(weaponvm, Prop_Send, "m_fEffects");
+				weapomvm_effects &= ~EF_BONEMERGE;
+				SetEntProp(weaponvm, Prop_Send, "m_fEffects", weapomvm_effects);
+				
+				SetVariantString("!activator");
+				AcceptEntityInput(weaponvm, "SetParent", weapon);
+				
+				SetVariantString("weapon_bone");
+				AcceptEntityInput(weaponvm, "SetParentAttachment");
+				
+				float posOffset[3];
+				attrKv.GetVector("pos", posOffset);
+				SetEntPropVector(weaponvm, Prop_Send, "m_vecOrigin", posOffset);
+				
+				float angOffset[3];
+				attrKv.GetVector("ang", angOffset);
+				SetEntPropVector(weaponvm, Prop_Send, "m_angRotation", angOffset);
+				
+				float modelScale = attrKv.GetFloat("scale", 1.0);
+				SetEntPropFloat(weaponvm, Prop_Send, "m_flModelScale", modelScale);
+				
+				attrKv.GoBack();
+			}
+			if (bitsActiveModels & MODEL_WORLD_ACTIVE
+					&& attrKv.JumpToKey("worldmodel override offset")) {
+				int weaponwm = g_iLastWorldModelRef[client];
+				
+				int weaponwm_effects = GetEntProp(weaponwm, Prop_Send, "m_fEffects");
+				weaponwm_effects &= ~EF_BONEMERGE;
+				SetEntProp(weaponwm, Prop_Send, "m_fEffects", weaponwm_effects);
+				
+				SetVariantString("!activator");
+				AcceptEntityInput(weaponwm, "SetParent", weapon);
+				
+				SetVariantString("weapon_bone");
+				AcceptEntityInput(weaponwm, "SetParentAttachment");
+				
+				float posOffset[3];
+				attrKv.GetVector("pos", posOffset);
+				SetEntPropVector(weaponwm, Prop_Send, "m_vecOrigin", posOffset);
+				
+				float angOffset[3];
+				attrKv.GetVector("ang", angOffset);
+				SetEntPropVector(weaponwm, Prop_Send, "m_angRotation", angOffset);
+				
+				float modelScale = attrKv.GetFloat("scale", 1.0);
+				SetEntPropFloat(weaponwm, Prop_Send, "m_flModelScale", modelScale);
+				
+				attrKv.GoBack();
+			}
+			delete attrKv;
+		}
 	}
 	
 	if (TF2_GetPlayerClass(client) == TFClass_DemoMan) {
