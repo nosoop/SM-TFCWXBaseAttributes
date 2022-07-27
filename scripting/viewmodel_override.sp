@@ -188,68 +188,67 @@ void UpdateClientWeaponModel(int client) {
 		
 		bitsActiveModels |= MODEL_WORLD_ACTIVE;
 	}
-
-	if(bitsActiveModels & (MODEL_VIEW_ACTIVE|MODEL_WORLD_ACTIVE) != 0) {
+	
+	if (bitsActiveModels & (MODEL_VIEW_ACTIVE | MODEL_WORLD_ACTIVE)) {
 		KeyValues attrKv = TF2CustAttr_GetAttributeKeyValues(weapon);
-		if(attrKv) {
-			if(bitsActiveModels & MODEL_VIEW_ACTIVE != 0) {
-				if(attrKv.JumpToKey("viewmodel override offset")) {
+		if (attrKv) {
+			if (bitsActiveModels & MODEL_VIEW_ACTIVE) {
+				if (attrKv.JumpToKey("viewmodel override offset")) {
 					int weaponvm = g_iLastViewmodelRef[client];
-
+					
 					int weapomvm_effects = GetEntProp(weaponvm, Prop_Send, "m_fEffects");
 					weapomvm_effects &= ~EF_BONEMERGE;
 					SetEntProp(weaponvm, Prop_Send, "m_fEffects", weapomvm_effects);
-
+					
 					SetVariantString("!activator");
 					AcceptEntityInput(weaponvm, "SetParent", weapon);
-
+					
 					SetVariantString("weapon_bone");
 					AcceptEntityInput(weaponvm, "SetParentAttachment");
-
+					
 					float posOffset[3];
 					attrKv.GetVector("pos", posOffset);
 					SetEntPropVector(weaponvm, Prop_Send, "m_vecOrigin", posOffset);
-
+					
 					float angOffset[3];
 					attrKv.GetVector("ang", angOffset);
 					SetEntPropVector(weaponvm, Prop_Send, "m_angRotation", angOffset);
-
+					
 					float modelScale = attrKv.GetFloat("scale", 1.0);
 					SetEntPropFloat(weaponvm, Prop_Send, "m_flModelScale", modelScale);
-
+					
 					attrKv.GoBack();
 				}
 			}
-
-			if(bitsActiveModels & MODEL_WORLD_ACTIVE != 0) {
-				if(attrKv.JumpToKey("worldmodel override offset")) {
+			
+			if (bitsActiveModels & MODEL_WORLD_ACTIVE) {
+				if (attrKv.JumpToKey("worldmodel override offset")) {
 					int weaponwm = g_iLastWorldModelRef[client];
-
+					
 					int weaponwm_effects = GetEntProp(weaponwm, Prop_Send, "m_fEffects");
 					weaponwm_effects &= ~EF_BONEMERGE;
 					SetEntProp(weaponwm, Prop_Send, "m_fEffects", weaponwm_effects);
-
+					
 					SetVariantString("!activator");
 					AcceptEntityInput(weaponwm, "SetParent", weapon);
-
+					
 					SetVariantString("weapon_bone");
 					AcceptEntityInput(weaponwm, "SetParentAttachment");
-
+					
 					float posOffset[3];
 					attrKv.GetVector("pos", posOffset);
 					SetEntPropVector(weaponwm, Prop_Send, "m_vecOrigin", posOffset);
-
+					
 					float angOffset[3];
 					attrKv.GetVector("ang", angOffset);
 					SetEntPropVector(weaponwm, Prop_Send, "m_angRotation", angOffset);
-
+					
 					float modelScale = attrKv.GetFloat("scale", 1.0);
 					SetEntPropFloat(weaponwm, Prop_Send, "m_flModelScale", modelScale);
-
+					
 					attrKv.GoBack();
 				}
 			}
-
 			delete attrKv;
 		}
 	}
