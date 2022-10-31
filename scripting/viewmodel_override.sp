@@ -136,7 +136,7 @@ void OnWeaponSwitchPost(int client, int weapon) {
 	if (!g_bIgnoreWeaponSwitch[client]) {
 		UpdateClientWeaponModel(client);
 	}
- }
+}
 
 /**
  * Called on weapon switch.  Detaches any old viewmodel overrides and attaches replacements.
