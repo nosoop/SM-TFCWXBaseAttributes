@@ -284,6 +284,18 @@ void UpdateClientWeaponModel(int client) {
 		}
 	}
 
+	if (TF2_GetPlayerClass(client) == TFClass_Soldier) {
+		// for mantread and gunboats..
+		int boots = TF2Util_GetPlayerLoadoutEntity(client, 1);
+		char bm[PLATFORM_MAX_PATH];
+		if (IsValidEntity(boots) && TF2Util_IsEntityWearable(boots)
+				&& TF2CustAttr_GetString(boots, "clientmodel override", bm, sizeof(bm))
+				&& FileExistsAndLog(bm, true)) {
+			PrecacheModelAndLog(bm);
+			SetEntityModel(boots, bm);
+		}
+	}
+
 	char armvmPath[PLATFORM_MAX_PATH];
 	if (!TF2CustAttr_GetString(weapon, "arm model override", armvmPath, sizeof(armvmPath))
 			&& bitsActiveModels & (MODEL_VIEW_ACTIVE | MODEL_OFFHAND_ACTIVE | MODEL_WORLD_ACTIVE) == 0) {
