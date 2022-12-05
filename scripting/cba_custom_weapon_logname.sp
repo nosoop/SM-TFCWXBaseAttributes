@@ -4,7 +4,6 @@
 #pragma newdecls required
 
 #include <tf_custom_attributes>
-#include <stocksoup/var_strings>
 #include <tf2>
 #include <tf2_stocks>
 #include <sdkhooks>
