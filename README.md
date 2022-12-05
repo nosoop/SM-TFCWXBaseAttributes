@@ -44,6 +44,20 @@ from GameBanana).  I can't help you there; that's outside the scope of this plug
 [File Precacher]: https://forums.alliedmods.net/showpost.php?p=2634602&postcount=484
 [samplemodels]: https://forums.alliedmods.net/showpost.php?p=2188941&postcount=246
 
+### Change Killicon
+
+`cba_change_killicon.smx` provides attribute: `change killicon`
+
+- **This attribute doesn't support custom killicon.**
+- Attribute value is full weapon name (e.g. `enforcer`). 
+
+### Custom Weapon Logname
+
+`cba_custom_weapon_logname.smx` provides attribute: `custom weapon logname`
+
+- Change weapon's console logname.
+- Attribute value is any string (e.g. `sledgehammer_demo`).
+
 ## Contributing
 
 Please do (but do file an issue first).  The only reason this repository is available is because
