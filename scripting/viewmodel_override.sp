@@ -45,7 +45,13 @@ int g_iLastWorldModelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 
 int g_iLastOffHandViewmodelRef[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 
-StringMap g_MissingModels;
+enum ModelAvailability {
+	ModelAvailability_Unknown,
+	ModelAvailability_Found,
+	ModelAvailability_NotFound
+};
+
+StringMap g_ModelAvailabilityCache;
 
 public void OnMapStart() {
 	for (int i = 1; i <= MaxClients; i++) {
@@ -57,8 +63,8 @@ public void OnMapStart() {
 	HookEvent("post_inventory_application", OnInventoryAppliedPost);
 	HookEvent("player_sapped_object", OnObjectSappedPost);
 	
-	delete g_MissingModels;
-	g_MissingModels = new StringMap();
+	delete g_ModelAvailabilityCache;
+	g_ModelAvailabilityCache = new StringMap();
 }
 
 public void OnPluginEnd() {
@@ -469,15 +475,19 @@ stock int TF2_SpawnWearableViewmodel() {
 
 bool FileExistsAndLog(const char[] path, bool use_valve_fs = false,
 		const char[] valve_path_id = "GAME") {
+	ModelAvailability availability = ModelAvailability_Unknown;
+	
+	if (g_ModelAvailabilityCache.GetValue(path, availability)) {
+		return availability == ModelAvailability_Found;
+	}
+	
 	if (FileExists(path, use_valve_fs, valve_path_id)) {
+		g_ModelAvailabilityCache.SetValue(path, ModelAvailability_Found);
 		return true;
 	}
 	
-	any discarded;
-	if (!g_MissingModels.GetValue(path, discarded)) {
-		LogError("Missing file '%s'", path);
-		g_MissingModels.SetValue(path, true);
-	}
+	LogError("Missing file '%s'", path);
+	g_ModelAvailabilityCache.SetValue(path, ModelAvailability_NotFound);
 	return false;
 }
 
